@@ -2,6 +2,13 @@
 #include <sstream>
 #include <SFML\Graphics.hpp>
 
+void updateBranches(int seed);
+const int NUM_BRANCHES = 6;
+sf::Sprite branches[NUM_BRANCHES];
+
+enum class Side { LEFT, RIGHT, NONE };
+Side branchPosition[NUM_BRANCHES];
+
 int main()
 {
     sf::VideoMode vm(1920, 1080);
@@ -84,6 +91,22 @@ int main()
     messageText.setOrigin(textRect.left + textRect.width / 2.0f, textRect.top + textRect.height / 2.0f);
     messageText.setPosition(1920 / 2.0f, 1080 / 2.0f);
     scoreText.setPosition(20, 20);
+
+    sf::Texture textureBranch;
+    textureBranch.loadFromFile("graphics/branch.png");
+    for (int i = 0; i < NUM_BRANCHES; i++)
+    {
+        branches[i].setTexture(textureBranch);
+        branches[i].setPosition(-2000, -2000);
+
+        branches[i].setOrigin(220, 20);
+    }
+
+    updateBranches(1);
+    updateBranches(2);
+    updateBranches(3);
+    updateBranches(4);
+    updateBranches(5);
 
     while (window.isOpen())
     {
@@ -208,6 +231,25 @@ int main()
             std::stringstream ss;
             ss << "Score = " << score;
             scoreText.setString(ss.str());
+
+            for (int i = 0; i < NUM_BRANCHES; i++)
+            {
+                float height = i * 150;
+                if (branchPosition[i] == Side::LEFT)
+                {
+                    branches[i].setPosition(610, height);
+                    branches[i].setRotation(180);
+                }
+                else if (branchPosition[i] == Side::RIGHT)
+                {
+                    branches[i].setPosition(1330, height);
+                    branches[i].setRotation(0);
+                }
+                else
+                {
+                    branches[i].setPosition(3000, height);
+                }
+            }
         }
 
         window.clear();
@@ -217,6 +259,11 @@ int main()
         window.draw(spriteCloud01);
         window.draw(spriteCloud02);
         window.draw(spriteCloud03);
+
+        for (int i = 0; i < NUM_BRANCHES; i++)
+        {
+            window.draw(branches[i]);
+        }
 
         window.draw(spriteTree);
         window.draw(spriteBee);
@@ -233,4 +280,28 @@ int main()
     }
 
     return 0;
+}
+
+void updateBranches(int seed)
+{
+    for (int i = NUM_BRANCHES - 1; i > 0; i--)
+    {
+        branchPosition[i] = branchPosition[i - 1];
+    }
+
+    srand((int)time(0) + seed);
+    int r = (rand() % 5);
+
+    switch (r)
+    {
+    case 0:
+        branchPosition[0] = Side::LEFT;
+        break;
+    case 1:
+        branchPosition[0] = Side::RIGHT;
+        break;
+    default:
+        branchPosition[0] = Side::NONE;
+        break;
+    }
 }
