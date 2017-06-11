@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include <sstream>
 #include <SFML\Graphics.hpp>
+#include <SFML\Audio.hpp>
 
 void updateBranches(int seed);
 const int NUM_BRANCHES = 6;
@@ -137,6 +138,21 @@ int main()
 
     bool acceptInput = false;
 
+    sf::SoundBuffer chopBuffer;
+    chopBuffer.loadFromFile("sound/chop.wav");
+    sf::Sound chop;
+    chop.setBuffer(chopBuffer);
+
+    sf::SoundBuffer deathBuffer;
+    deathBuffer.loadFromFile("sound/death.wav");
+    sf::Sound death;
+    death.setBuffer(deathBuffer);
+
+    sf::SoundBuffer outOfTimeBuffer;
+    outOfTimeBuffer.loadFromFile("sound/out_of_time.wav");
+    sf::Sound outOfTime;
+    outOfTime.setBuffer(outOfTimeBuffer);
+
     while (window.isOpen())
     {
         sf::Event event;
@@ -192,6 +208,8 @@ int main()
                 logSpeedX = -5000;
                 isLogActive = true;
                 acceptInput = false;
+
+                chop.play();
             }
 
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
@@ -211,6 +229,8 @@ int main()
                 logSpeedX = 5000;
                 isLogActive = true;
                 acceptInput = false;
+
+                chop.play();
             }
         }
 
@@ -229,6 +249,8 @@ int main()
                 sf::FloatRect textRect = messageText.getLocalBounds();
                 messageText.setOrigin(textRect.left + textRect.width / 2.0f, textRect.top + textRect.height / 2.0f);
                 messageText.setPosition(1920 / 2.0f, 108 / 2.0f);
+
+                outOfTime.play();
             }
 
             if (!beeIsActive)
@@ -370,6 +392,8 @@ int main()
                 messageText.setOrigin(textRect.left + textRect.width / 2.0f, textRect.top + textRect.height / 2.0f);
 
                 messageText.setPosition(1920 / 2.0f, 1080 / 2.0f);
+
+                death.play();
             }
         }
 
