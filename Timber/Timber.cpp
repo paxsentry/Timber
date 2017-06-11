@@ -102,14 +102,54 @@ int main()
         branches[i].setOrigin(220, 20);
     }
 
-    updateBranches(1);
-    updateBranches(2);
-    updateBranches(3);
-    updateBranches(4);
-    updateBranches(5);
+    sf::Texture texturePlayer;
+    texturePlayer.loadFromFile("graphics/player.png");
+    sf::Sprite spritePlayer;
+    spritePlayer.setTexture(texturePlayer);
+    spritePlayer.setPosition(580, 720);
+
+    Side playerSide = Side::LEFT;
+
+    sf::Texture textureRip;
+    textureRip.loadFromFile("graphics/rip.png");
+    sf::Sprite spriteRip;
+    spriteRip.setTexture(textureRip);
+    spriteRip.setPosition(600, 860);
+
+    sf::Texture textureAxe;
+    textureAxe.loadFromFile("graphics/axe.png");
+    sf::Sprite spriteAxe;
+    spriteAxe.setTexture(textureAxe);
+    spriteAxe.setPosition(700, 830);
+
+    const float AXE_POSITION_LEFT = 700;
+    const float AXE_POSITION_RIGHT = 1075;
+
+    sf::Texture textureLog;
+    textureLog.loadFromFile("graphics/log.png");
+    sf::Sprite spriteLog;
+    spriteLog.setTexture(textureLog);
+    spriteLog.setPosition(810, 720);
+
+    bool isLogActive = false;
+    float logSpeedX = 1000;
+    float logSpeedY = -1500;
+
+    bool acceptInput = false;
 
     while (window.isOpen())
     {
+        sf::Event event;
+        while (window.pollEvent(event))
+        {
+            if (event.type == sf::Event::KeyReleased && !pause)
+            {
+                acceptInput = true;
+
+                spriteAxe.setPosition(2000, spriteAxe.getPosition().y);
+            }
+        }
+
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
         {
             window.close();
@@ -121,6 +161,57 @@ int main()
 
             score = 0;
             timeRemaining = 5;
+
+            for (int i = 0; i < NUM_BRANCHES; i++)
+            {
+                branchPosition[i] = Side::NONE;
+            }
+
+            spriteRip.setPosition(675, 2000);
+
+            spritePlayer.setPosition(580, 720);
+            acceptInput = true;
+        }
+
+        if (acceptInput)
+        {
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
+            {
+                playerSide = Side::RIGHT;
+                score++;
+
+                timeRemaining += (2 / score) + .15;
+
+                spriteAxe.setPosition(AXE_POSITION_RIGHT, spriteAxe.getPosition().y);
+
+                spritePlayer.setPosition(1200, 720);
+
+                updateBranches(score);
+
+                spriteLog.setPosition(810, 720);
+                logSpeedX = -5000;
+                isLogActive = true;
+                acceptInput = false;
+            }
+
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
+            {
+                playerSide = Side::LEFT;
+                score++;
+
+                timeRemaining += (2 / score) + .15;
+
+                spriteAxe.setPosition(AXE_POSITION_LEFT, spriteAxe.getPosition().y);
+
+                spritePlayer.setPosition(580, 720);
+
+                updateBranches(score);
+
+                spriteLog.setPosition(810, 720);
+                logSpeedX = 5000;
+                isLogActive = true;
+                acceptInput = false;
+            }
         }
 
         if (!pause)
@@ -250,6 +341,18 @@ int main()
                     branches[i].setPosition(3000, height);
                 }
             }
+
+            if (isLogActive)
+            {
+                spriteLog.setPosition(spriteLog.getPosition().x + (logSpeedX * delta.asSeconds()),
+                    spriteLog.getPosition().y + (logSpeedY * delta.asSeconds()));
+
+                if (spriteLog.getPosition().x < -100 || spriteLog.getPosition().y >2000)
+                {
+                    isLogActive = false;
+                    spriteLog.setPosition(810, 720);
+                }
+            }
         }
 
         window.clear();
@@ -266,6 +369,12 @@ int main()
         }
 
         window.draw(spriteTree);
+
+        window.draw(spritePlayer);
+        window.draw(spriteAxe);
+        window.draw(spriteLog);
+        window.draw(spriteRip);
+
         window.draw(spriteBee);
 
         window.draw(scoreText);
