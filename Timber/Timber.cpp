@@ -14,6 +14,7 @@ int main()
 {
     sf::VideoMode vm(1920, 1080);
     sf::RenderWindow window(vm, "Timber");
+    window.setFramerateLimit(60);
 
     sf::Texture textureBackground;
     textureBackground.loadFromFile("graphics/background.png");
@@ -27,6 +28,24 @@ int main()
     spriteTree.setTexture(textureTree);
     spriteTree.setPosition(810, 0);
 
+    sf::Texture tree2;
+    tree2.loadFromFile("graphics/tree2.png");
+    sf::Sprite spriteTree2;
+    spriteTree2.setTexture(tree2);
+    spriteTree2.setPosition(20, 0);
+
+    sf::Sprite spriteTree3;
+    spriteTree3.setTexture(tree2);
+    spriteTree3.setPosition(300, -400);
+
+    sf::Sprite spriteTree4;
+    spriteTree4.setTexture(tree2);
+    spriteTree4.setPosition(1300, -400);
+
+    sf::Sprite spriteTree5;
+    spriteTree5.setTexture(tree2);
+    spriteTree5.setPosition(1500, -500);
+
     sf::Texture textureBee;
     textureBee.loadFromFile("graphics/bee.png");
     sf::Sprite spriteBee;
@@ -38,21 +57,18 @@ int main()
 
     sf::Texture textureCloud;
     textureCloud.loadFromFile("graphics/cloud.png");
-    sf::Sprite spriteCloud01;
-    sf::Sprite spriteCloud02;
-    sf::Sprite spriteCloud03;
-    spriteCloud01.setTexture(textureCloud);
-    spriteCloud02.setTexture(textureCloud);
-    spriteCloud03.setTexture(textureCloud);
-    spriteCloud01.setPosition(0, 0);
-    spriteCloud02.setPosition(0, 250);
-    spriteCloud03.setPosition(0, 500);
-    bool cloud01IsActive = false;
-    bool cloud02IsActive = false;
-    bool cloud03IsActive = false;
-    float cloud01Speed = 0.0f;
-    float cloud02Speed = 0.0f;
-    float cloud03Speed = 0.0f;
+    const int NUM_CLOUDS = 6;
+    sf::Sprite clouds[NUM_CLOUDS];
+    int cloudSpeed[NUM_CLOUDS];
+    bool cloudIsActive[NUM_CLOUDS];
+
+    for (int i = 0; i < NUM_CLOUDS; i++)
+    {
+        clouds[i].setTexture(textureCloud);
+        clouds[i].setPosition(-300, i * 150);
+        cloudIsActive[i] = false;
+        cloudSpeed[i] = 0;
+    }
 
     sf::Clock clock;
     bool pause = true;
@@ -72,12 +88,14 @@ int main()
     int score = 0;
     sf::Text messageText;
     sf::Text scoreText;
+    sf::Text fpsText;
 
     sf::Font font;
     font.loadFromFile("fonts/KOMIKAP_.ttf");
 
     messageText.setFont(font);
     scoreText.setFont(font);
+    fpsText.setFont(font);
 
     messageText.setString("Press Enter to start!");
     scoreText.setString("Score = 0");
@@ -87,11 +105,19 @@ int main()
 
     messageText.setFillColor(sf::Color::White);
     scoreText.setFillColor(sf::Color::White);
+    fpsText.setFillColor(sf::Color::White);
 
     sf::FloatRect textRect = messageText.getLocalBounds();
     messageText.setOrigin(textRect.left + textRect.width / 2.0f, textRect.top + textRect.height / 2.0f);
     messageText.setPosition(1920 / 2.0f, 1080 / 2.0f);
     scoreText.setPosition(20, 20);
+
+    fpsText.setPosition(1200, 20);
+
+    sf::RectangleShape textBg;
+    textBg.setFillColor(sf::Color(0, 0, 0, 150));
+    textBg.setSize(sf::Vector2f(600, 105));
+    textBg.setPosition(0, 30);
 
     sf::Texture textureBranch;
     textureBranch.loadFromFile("graphics/branch.png");
@@ -152,6 +178,8 @@ int main()
     outOfTimeBuffer.loadFromFile("sound/out_of_time.wav");
     sf::Sound outOfTime;
     outOfTime.setBuffer(outOfTimeBuffer);
+
+    int lastDrawn = 0;
 
     while (window.isOpen())
     {
@@ -275,75 +303,44 @@ int main()
                 }
             }
 
-            if (!cloud01IsActive)
+            for (int i = 0; i < NUM_CLOUDS; i++)
             {
-                srand((int)time(0) * 10);
-                cloud01Speed = (rand() % 200);
-
-                srand((int)time(0) * 10);
-                float height = (rand() % 150);
-                spriteCloud01.setPosition(-200, height);
-                cloud01IsActive = true;
-            }
-            else
-            {
-                spriteCloud01.setPosition(
-                    spriteCloud01.getPosition().x + (cloud01Speed * delta.asSeconds()),
-                    spriteCloud01.getPosition().y);
-
-                if (spriteCloud01.getPosition().x > 1920)
+                if (!cloudIsActive[i])
                 {
-                    cloud01IsActive = false;
+                    srand((int)time(0) * 10);
+                    cloudSpeed[i] = (rand() % 200);
+
+                    srand((int)time(0) * 10);
+                    float height = (rand() % 150);
+                    clouds[i].setPosition(-200, height);
+                    cloudIsActive[i] = true;
+                }
+                else
+                {
+                    clouds[i].setPosition(
+                        clouds[i].getPosition().x + (cloudSpeed[i] * delta.asSeconds()),
+                        clouds[i].getPosition().y);
+
+                    if (clouds[i].getPosition().x > 1920)
+                    {
+                        cloudIsActive[i] = false;
+                    }
                 }
             }
 
-            if (!cloud02IsActive)
+            lastDrawn++;
+
+            if (lastDrawn == 100)
             {
-                srand((int)time(0) * 20);
-                cloud02Speed = (rand() % 200);
+                std::stringstream ss;
+                ss << "Score = " << score;
+                scoreText.setString(ss.str());
 
-                srand((int)time(0) * 20);
-                float height = (rand() % 300) - 150;
-                spriteCloud02.setPosition(-200, height);
-                cloud02IsActive = true;
+                std::stringstream ssFps;
+                ssFps << "FPS: " << 1 / delta.asSeconds();
+                fpsText.setString(ssFps.str());
+                lastDrawn = 0;
             }
-            else
-            {
-                spriteCloud02.setPosition(
-                    spriteCloud02.getPosition().x + (cloud02Speed * delta.asSeconds()),
-                    spriteCloud02.getPosition().y);
-
-                if (spriteCloud02.getPosition().x > 1920)
-                {
-                    cloud02IsActive = false;
-                }
-            }
-
-            if (!cloud03IsActive)
-            {
-                srand((int)time(0) * 30);
-                cloud03Speed = (rand() % 200);
-
-                srand((int)time(0) * 30);
-                float height = (rand() % 450) - 450;
-                spriteCloud03.setPosition(-200, height);
-                cloud03IsActive = true;
-            }
-            else
-            {
-                spriteCloud03.setPosition(
-                    spriteCloud03.getPosition().x + (cloud03Speed * delta.asSeconds()),
-                    spriteCloud03.getPosition().y);
-
-                if (spriteCloud03.getPosition().x > 1920)
-                {
-                    cloud03IsActive = false;
-                }
-            }
-
-            std::stringstream ss;
-            ss << "Score = " << score;
-            scoreText.setString(ss.str());
 
             for (int i = 0; i < NUM_BRANCHES; i++)
             {
@@ -401,9 +398,10 @@ int main()
 
         window.draw(spriteBackground);
 
-        window.draw(spriteCloud01);
-        window.draw(spriteCloud02);
-        window.draw(spriteCloud03);
+        for (int i = 0; i < NUM_CLOUDS; i++)
+        {
+            window.draw(clouds[i]);
+        }
 
         for (int i = 0; i < NUM_BRANCHES; i++)
         {
@@ -411,6 +409,10 @@ int main()
         }
 
         window.draw(spriteTree);
+        window.draw(spriteTree2);
+        window.draw(spriteTree3);
+        window.draw(spriteTree4);
+        window.draw(spriteTree5);
 
         window.draw(spritePlayer);
         window.draw(spriteAxe);
@@ -420,6 +422,9 @@ int main()
         window.draw(spriteBee);
 
         window.draw(scoreText);
+        window.draw(textBg);
+
+        window.draw(fpsText);
 
         window.draw(timeBar);
         if (pause)
